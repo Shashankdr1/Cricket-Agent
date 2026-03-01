@@ -14,7 +14,7 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-img = get_base64_image(r"C:\Users\shashank.dr\pdf-agent\cricket.jpg")
+img = get_base64_image("cricket.jpg")
 
 st.markdown(f"""
 <style>
