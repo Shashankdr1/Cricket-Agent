@@ -212,10 +212,25 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # PDF Upload
-st.markdown('<div style="color:white; font-size:0.8rem; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:0.5rem;">📄 Upload Document</div>', unsafe_allow_html=True)
-uploaded_file = st.file_uploader("", type="pdf", label_visibility="collapsed", accept_multiple_files=True)
+import os
 
-if uploaded_file and len(uploaded_file) > 0:
+# Auto-load PDFs from pdfs folder
+pdf_text = ""
+page_count = 0
+pdf_folder = "pdfs"
+pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
+
+for filename in pdf_files:
+    path = os.path.join(pdf_folder, filename)
+    pdf = fitz.open(path)
+    for page in pdf:
+        pdf_text += page.get_text()
+    page_count += len(pdf)
+
+word_count = len(pdf_text.split())
+uploaded_file = pdf_files  # treat as list
+
+if pdf_files:
     pdf_text = ""
     page_count = 0
     for file in uploaded_file:
@@ -227,7 +242,7 @@ if uploaded_file and len(uploaded_file) > 0:
     word_count = len(pdf_text.split())
 
     st.markdown(f"""
-    <div class="success-pill">✅ {len(uploaded_file)} PDF(s) loaded</div>
+    <div class="success-pill">✅ {len(pdf_files)} PDF(s) preloaded</div>
     <div class="stat-row">
         <div class="stat"><div class="stat-number">{page_count}</div><div class="stat-label">Pages</div></div>
         <div class="stat"><div class="stat-number">{word_count:,}</div><div class="stat-label">Words</div></div>
