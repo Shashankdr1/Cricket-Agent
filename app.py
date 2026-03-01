@@ -221,15 +221,6 @@ for filename in pdf_files:
 word_count = len(pdf_text.split())
 
 if pdf_files:
-    st.markdown(f"""
-    <div class="success-pill">✅ {len(pdf_files)} PDF(s) preloaded</div>
-    <div class="stat-row">
-        <div class="stat"><div class="stat-number">{page_count}</div><div class="stat-label">Pages</div></div>
-        <div class="stat"><div class="stat-number">{word_count:,}</div><div class="stat-label">Words</div></div>
-        <div class="stat"><div class="stat-number">AI</div><div class="stat-label">Powered</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-
     # Summary button
     if st.button("📝 Summarize All PDFs"):
         if not api_key:
