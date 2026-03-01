@@ -188,17 +188,18 @@ st.markdown("""
 
 # Sidebar
 with st.sidebar:
-    st.markdown("### ⚙️ Settings")
-    api_key = st.text_input("Groq API Key", type="password", placeholder="gsk_...")
+    st.markdown("### 🏏 Cricket Agent")
     st.markdown("---")
     st.markdown("**How to use:**")
-    st.markdown("1. Enter your Groq API key")
-    st.markdown("2. Ask any cricket question!")
+    st.markdown("1. Ask any cricket question!")
+    st.markdown("2. Click 📝 to summarize all PDFs")
     st.markdown("---")
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
         st.rerun()
     st.markdown("<small style='color:#3a4a5a'>Cricket Agent v1.0</small>", unsafe_allow_html=True)
+
+api_key = st.secrets.get("GROQ_API_KEY", "")
 
 # Initialize chat history
 if "messages" not in st.session_state:
