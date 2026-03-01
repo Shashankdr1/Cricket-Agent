@@ -2,6 +2,7 @@ import streamlit as st
 import fitz  # PyMuPDF
 from groq import Groq
 import base64
+import os
 
 # Page config
 st.set_page_config(
@@ -35,7 +36,6 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# Custom CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap');
@@ -172,12 +172,6 @@ footer {
     letter-spacing: 0.1em;
 }
 
-.stFileUploader > div {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px dashed rgba(255,255,255,0.15) !important;
-    border-radius: 12px !important;
-}
-
 .stSpinner > div { border-top-color: #40916c !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -187,7 +181,7 @@ st.markdown("""
 <div class="hero">
     <div class="hero-badge">⚡ AI Powered</div>
     <h1>Cricket Agent</h1>
-    <p>Upload any cricket document and get instant answers powered by AI</p>
+    <p>Ask anything about cricket — powered by AI</p>
 </div>
 <hr class="divider">
 """, unsafe_allow_html=True)
@@ -199,8 +193,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**How to use:**")
     st.markdown("1. Enter your Groq API key")
-    st.markdown("2. Upload a cricket PDF")
-    st.markdown("3. Ask any question!")
+    st.markdown("2. Ask any cricket question!")
     st.markdown("---")
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
@@ -210,9 +203,6 @@ with st.sidebar:
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
-# PDF Upload
-import os
 
 # Auto-load PDFs from pdfs folder
 pdf_text = ""
@@ -228,19 +218,8 @@ for filename in pdf_files:
     page_count += len(pdf)
 
 word_count = len(pdf_text.split())
-uploaded_file = pdf_files  # treat as list
 
 if pdf_files:
-    pdf_text = ""
-    page_count = 0
-    for file in uploaded_file:
-        pdf = fitz.open(stream=file.read(), filetype="pdf")
-        for page in pdf:
-            pdf_text += page.get_text()
-        page_count += len(pdf)
-
-    word_count = len(pdf_text.split())
-
     st.markdown(f"""
     <div class="success-pill">✅ {len(pdf_files)} PDF(s) preloaded</div>
     <div class="stat-row">
@@ -250,9 +229,8 @@ if pdf_files:
     </div>
     """, unsafe_allow_html=True)
 
-    # Display chat history
     # Summary button
-    if st.button("📝 Summarize PDF"):
+    if st.button("📝 Summarize All PDFs"):
         if not api_key:
             st.warning("⚠️ Please enter your Groq API Key in the sidebar.")
         else:
@@ -262,13 +240,15 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a cricket expert. Give a clear and concise summary of ALL the documents provided in bullet points. Cover key points from each document.\n\nDocuments:\n{pdf_text[:80000]}"
+                        "content": f"You are a cricket expert. Give a clear and concise summary of ALL the documents in bullet points.\n\nDocuments:\n{pdf_text[:20000]}"
                     }]
                 )
                 summary = response.choices[0].message.content
-            st.session_state.messages.append({"role": "user", "content": "📝 Summarize the PDF"})
+            st.session_state.messages.append({"role": "user", "content": "📝 Summarize all PDFs"})
             st.session_state.messages.append({"role": "assistant", "content": summary})
             st.rerun()
+
+    # Display chat history
     for msg in st.session_state.messages:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-user">🧑 {msg["content"]}</div>', unsafe_allow_html=True)
@@ -276,7 +256,7 @@ if pdf_files:
             st.markdown(f'<div class="chat-bot">🏏 {msg["content"]}</div>', unsafe_allow_html=True)
 
     # Question input
-    question = st.chat_input("Ask a question about your PDF...")
+    question = st.chat_input("Ask a question about cricket...")
 
     if question:
         if not api_key:
@@ -286,13 +266,11 @@ if pdf_files:
 
             with st.spinner("Analyzing..."):
                 client = Groq(api_key=api_key)
-
                 history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
                 history.insert(0, {
                     "role": "user",
                     "content": f"You are a cricket expert AI assistant. Use this document to answer questions. Be specific, accurate and concise.\n\nDocument:\n{pdf_text[:8000]}"
                 })
-
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=history
@@ -306,7 +284,7 @@ else:
     st.markdown("""
     <div style="text-align:center; padding: 2rem; border: 1px dashed rgba(255,255,255,0.15); border-radius:16px;">
         <div style="font-size:3rem">🏏</div>
-        <div style="font-size:0.9rem; margin-top:0.5rem; color:white; text-shadow:1px 1px 4px rgba(0,0,0,0.9);">Upload a cricket PDF to begin</div>
+        <div style="font-size:0.9rem; margin-top:0.5rem; color:white;">No PDFs found in pdfs folder.</div>
     </div>
     """, unsafe_allow_html=True)
 
