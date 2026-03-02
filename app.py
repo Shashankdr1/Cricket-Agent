@@ -232,8 +232,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a friendly cricket expert AI assistant with deep knowledge about all cricket topics worldwide - Test cricket, ODIs, T20s, World Cups, players, history, rules, and all tournaments like IPL, Ashes, BBL, PSL, CPL and more. When someone greets you, just greet back simply without mentioning any specific tournament. Only mention specific tournaments when the user asks about them. Use the documents below to answer specific questions.\n\nDocuments:\n{pdf_text[:8000]}"
-                    }]
+                        "content": f"You are a friendly cricket expert AI assistant. IMPORTANT RULES: 1) When someone greets you like 'hello' or 'hi', just say hello back simply - never mention IPL or any tournament in greetings. 2) Only talk about specific tournaments like IPL when the user specifically asks about them. 3) You cover all cricket topics worldwide. Use these documents only when user asks specific questions:\n\nDocuments:\n{pdf_text[:8000]}"                    }]
                 )
                 summary = response.choices[0].message.content
             st.session_state.messages.append({"role": "user", "content": "📝 Summarize all PDFs"})
