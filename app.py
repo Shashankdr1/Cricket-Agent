@@ -232,7 +232,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a friendly cricket expert AI assistant. You have knowledge about all aspects of cricket - players, matches, rules, history, tournaments worldwide. Use the provided documents to answer specific questions, but you can also answer general cricket questions from your own knowledge. Be specific, accurate and concise.\n\nDocument:\n{pdf_text[:8000]}"
+                        "content": f"You are a friendly cricket expert AI assistant with deep knowledge about all cricket topics worldwide - Test cricket, ODIs, T20s, World Cups, players, history, rules, and all tournaments like IPL, Ashes, BBL, PSL, CPL and more. When someone greets you, just greet back simply without mentioning any specific tournament. Only mention specific tournaments when the user asks about them. Use the documents below to answer specific questions.\n\nDocuments:\n{pdf_text[:8000]}"
                     }]
                 )
                 summary = response.choices[0].message.content
