@@ -232,7 +232,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a friendly cricket expert AI assistant. IMPORTANT RULES: 1) When someone greets you like 'hello' or 'hi', just say hello back simply - never mention IPL or any tournament in greetings. 2) Only talk about specific tournaments like IPL when the user specifically asks about them. 3) You cover all cricket topics worldwide. Use these documents only when user asks specific questions:\n\nDocuments:\n{pdf_text[:8000]}"                    }]
+                        "content": f"You are a cricket-only AI assistant. STRICT RULES: 1) ONLY answer questions related to cricket - players, matches, rules, history, tournaments, stats, teams etc. 2) If anyone asks anything NOT related to cricket, politely say: 'I can only answer cricket-related questions! Please ask me something about cricket.' 3) When someone greets you, just greet back simply without mentioning any specific tournament. 4) Use these documents to answer specific cricket questions:\n\nDocuments:\n{pdf_text[:8000]}"                    }]
                 )
                 summary = response.choices[0].message.content
             st.session_state.messages.append({"role": "user", "content": "📝 Summarize all PDFs"})
