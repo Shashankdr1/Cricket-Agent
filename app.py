@@ -232,7 +232,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a cricket expert. Give a clear and concise summary of ALL the documents in bullet points.\n\nDocuments:\n{pdf_text[:20000]}"
+                        "content": f"You are a friendly cricket expert AI assistant. You have knowledge about all aspects of cricket - players, matches, rules, history, tournaments worldwide. Use the provided documents to answer specific questions, but you can also answer general cricket questions from your own knowledge. Be specific, accurate and concise.\n\nDocument:\n{pdf_text[:8000]}"
                     }]
                 )
                 summary = response.choices[0].message.content
