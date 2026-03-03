@@ -223,7 +223,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"Is this question related to cricket? Answer only YES or NO: '{question}'"
+                        "content": f"Is this message related to cricket, OR is it a greeting, emotion, appreciation or general conversation (like hello, thank you, how are you, great, awesome etc)? Answer only YES or NO: '{question}'"
                     }]
                 )
                 is_cricket = "YES" in check_response.choices[0].message.content.upper()
