@@ -249,7 +249,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"Given this conversation context, is the latest message a follow-up to a cricket topic, OR related to cricket, OR a greeting/emotion/appreciation? Answer only YES or NO.\n\nPrevious messages: {[m['content'] for m in st.session_state.messages[-3:]]}\n\nLatest message: '{question}'"
+                        "content": f"Answer YES if the latest message is ANY of these: (1) related to cricket, (2) a greeting like hello/hi, (3) an emotion or appreciation like thank you/perfect/great/awesome/nice/wow/good, (4) a follow-up to previous cricket conversation, (5) a short response like ok/yes/no/sure. Answer NO only if it is clearly about a non-cricket topic like science, politics, food etc.\n\nPrevious messages: {[m['content'] for m in st.session_state.messages[-3:]]}\n\nLatest message: '{question}'"
                     }]
                 )
                 is_cricket = "YES" in check_response.choices[0].message.content.upper()
