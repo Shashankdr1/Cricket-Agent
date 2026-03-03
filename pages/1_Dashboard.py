@@ -136,19 +136,6 @@ for filename in pdf_files:
         word_count += len(page.get_text().split())
     page_count += len(pdf)
 
-# Top stats
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.markdown(f'<div class="stat-card"><h2>{len(pdf_files)}</h2><p>Documents Loaded</p></div>', unsafe_allow_html=True)
-with col2:
-    st.markdown(f'<div class="stat-card"><h2>{page_count}</h2><p>Total Pages</p></div>', unsafe_allow_html=True)
-with col3:
-    st.markdown(f'<div class="stat-card"><h2>{word_count:,}</h2><p>Words Indexed</p></div>', unsafe_allow_html=True)
-with col4:
-    st.markdown(f'<div class="stat-card"><h2>RAG</h2><p>AI Powered</p></div>', unsafe_allow_html=True)
-
-st.markdown("---")
-
 # Row 1
 col1, col2 = st.columns(2)
 
@@ -157,7 +144,7 @@ with col1:
     teams = ["Australia", "India", "England", "New Zealand", "South Africa", "Pakistan", "Sri Lanka", "West Indies"]
     ratings = [128, 121, 110, 98, 95, 88, 75, 68]
     fig = px.bar(x=ratings, y=teams, orientation='h', color=ratings,
-                 color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"],
+                 color_continuous_scale=["#ffffff", "#f9e04b", "#ff6b35"]
                  labels={"x": "Rating Points", "y": "Team"})
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
                       font=dict(color='white'), coloraxis_showscale=False,
@@ -171,7 +158,7 @@ with col2:
     wc_data = {"Team": ["Australia", "India", "West Indies", "Pakistan", "Sri Lanka", "England"],
                "Titles": [5, 3, 2, 1, 1, 1]}
     fig2 = px.pie(wc_data, values="Titles", names="Team",
-                  color_discrete_sequence=["#f9e04b", "#40916c", "#2d6a4f", "#95d5b2", "#1b4332", "#c9a96e"])
+                  color_discrete_sequence=["#ff6b35", "#f9e04b", "#ffffff", "#00d4ff", "#ff3366", "#00ff88"])
     fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='white'),
                        margin=dict(l=0, r=0, t=0, b=0))
     st.plotly_chart(fig2, use_container_width=True)
