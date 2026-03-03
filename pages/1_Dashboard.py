@@ -144,7 +144,7 @@ with col1:
     teams = ["Australia", "India", "England", "New Zealand", "South Africa", "Pakistan", "Sri Lanka", "West Indies"]
     ratings = [128, 121, 110, 98, 95, 88, 75, 68]
     fig = px.bar(x=ratings, y=teams, orientation='h', color=ratings,
-                 color_continuous_scale=["#ffffff", "#f9e04b", "#ff6b35"]
+                 color_continuous_scale=["#ffffff", "#f9e04b", "#ff6b35"],
                  labels={"x": "Rating Points", "y": "Team"})
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
                       font=dict(color='white'), coloraxis_showscale=False,
