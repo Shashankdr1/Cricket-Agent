@@ -147,6 +147,12 @@ st.markdown("""
 <hr class="divider">
 """, unsafe_allow_html=True)
 
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown('<a href="/" target="_self"><button style="width:100%; padding:0.8rem; background:rgba(64,145,108,0.4); border:1px solid #40916c; border-radius:10px; color:white; font-size:1rem; cursor:pointer;">💬 AI Chat</button></a>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<a href="/Dashboard" target="_self"><button style="width:100%; padding:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; font-size:1rem; cursor:pointer;">📊 Dashboard</button></a>', unsafe_allow_html=True)
+
 # Sidebar
 with st.sidebar:
     st.markdown("### 🏏 Cricket Agent")
