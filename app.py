@@ -99,48 +99,6 @@ html, body, [data-testid="stAppViewContainer"] {
     margin: 2rem 0;
 }
 
-.success-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(45,106,79,0.3);
-    border: 1px solid #40916c;
-    color: #95d5b2;
-    padding: 0.4rem 1rem;
-    border-radius: 2rem;
-    font-size: 0.8rem;
-    margin-bottom: 1rem;
-}
-
-.stat-row {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.stat {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 10px;
-    padding: 0.8rem;
-    text-align: center;
-}
-
-.stat-number {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.4rem;
-    color: #c9a96e;
-}
-
-.stat-label {
-    font-size: 0.65rem;
-    color: #8a9bb0;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
 .chat-user {
     text-align: right;
     background: rgba(255,255,255,0.15);
@@ -221,10 +179,11 @@ for filename in pdf_files:
 word_count = len(pdf_text.split())
 
 if pdf_files:
+
     # Summary button
     if st.button("📝 Summarize All PDFs"):
         if not api_key:
-            st.warning("⚠️ Please enter your Groq API Key in the sidebar.")
+            st.warning("⚠️ API key not found.")
         else:
             with st.spinner("Summarizing..."):
                 client = Groq(api_key=api_key)
@@ -232,7 +191,8 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a cricket-only AI assistant with deep cricket knowledge. STRICT RULES: 1) ONLY answer cricket-related questions. 2) For non-cricket questions, just say: 'I only know about cricket! Ask me anything about cricket.' 3) NEVER say 'the document does not mention' - just answer cricket questions directly from your own cricket knowledge. 4) Only use the documents for very specific stats or facts. 5) When greeted, just greet back simply.\n\nDocuments for reference:\n{pdf_text[:8000]}"                   }]
+                        "content": f"You are a cricket expert. Summarize ALL these cricket documents in bullet points covering key topics from each.\n\nDocuments:\n{pdf_text[:20000]}"
+                    }]
                 )
                 summary = response.choices[0].message.content
             st.session_state.messages.append({"role": "user", "content": "📝 Summarize all PDFs"})
@@ -251,41 +211,36 @@ if pdf_files:
 
     if question:
         if not api_key:
-            st.warning("⚠️ Please enter your Groq API Key in the sidebar.")
+            st.warning("⚠️ API key not found.")
         else:
             st.session_state.messages.append({"role": "user", "content": question})
 
             with st.spinner("Analyzing..."):
-    client = Groq(api_key=api_key)
+                client = Groq(api_key=api_key)
 
-    # First check if question is cricket related
-    check_response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{
-            "role": "user",
-            "content": f"Is this question related to cricket? Answer only YES or NO: '{question}'"
-        }]
-    )
-    is_cricket = "YES" in check_response.choices[0].message.content.upper()
-
-    if not is_cricket:
-        answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
-    else:
-        history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
-        history.insert(0, {
-            "role": "user",
-            "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats.\n\nDocuments:\n{pdf_text[:8000]}"
-        })
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=history
-        )
-        answer = response.choices[0].message.content
-                response = client.chat.completions.create(
+                # Check if question is cricket related
+                check_response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=history
+                    messages=[{
+                        "role": "user",
+                        "content": f"Is this question related to cricket? Answer only YES or NO: '{question}'"
+                    }]
                 )
-                answer = response.choices[0].message.content
+                is_cricket = "YES" in check_response.choices[0].message.content.upper()
+
+                if not is_cricket:
+                    answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
+                else:
+                    history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+                    history.insert(0, {
+                        "role": "user",
+                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats.\n\nDocuments:\n{pdf_text[:8000]}"
+                    })
+                    response = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=history
+                    )
+                    answer = response.choices[0].message.content
 
             st.session_state.messages.append({"role": "assistant", "content": answer})
             st.rerun()
