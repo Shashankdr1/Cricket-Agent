@@ -256,12 +256,31 @@ if pdf_files:
             st.session_state.messages.append({"role": "user", "content": question})
 
             with st.spinner("Analyzing..."):
-                client = Groq(api_key=api_key)
-                history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
-                history.insert(0, {
-                    "role": "user",
-                    "content": f"You are a cricket expert AI assistant. Use this document to answer questions. Be specific, accurate and concise.\n\nDocument:\n{pdf_text[:8000]}"
-                })
+    client = Groq(api_key=api_key)
+
+    # First check if question is cricket related
+    check_response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{
+            "role": "user",
+            "content": f"Is this question related to cricket? Answer only YES or NO: '{question}'"
+        }]
+    )
+    is_cricket = "YES" in check_response.choices[0].message.content.upper()
+
+    if not is_cricket:
+        answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
+    else:
+        history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+        history.insert(0, {
+            "role": "user",
+            "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats.\n\nDocuments:\n{pdf_text[:8000]}"
+        })
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=history
+        )
+        answer = response.choices[0].message.content
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=history
