@@ -234,7 +234,7 @@ if pdf_files:
                     history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
                     history.insert(0, {
                         "role": "user",
-                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats.\n\nDocuments:\n{pdf_text[:8000]}"
+                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats. IMPORTANT RULES FOR PREDICTIONS: 1) If someone asks for future match predictions, always start your answer with a clear disclaimer: 'Note: This is purely a prediction based on historical data. Player availability and team compositions may have changed as some players may have retired or new players may have emerged.' 2) Never confidently state specific player names in future predictions without mentioning they might not be playing anymore. 3) Always remind that cricket is unpredictable.\n\nDocuments:\n{pdf_text[:8000]}"
                     })
                     response = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
