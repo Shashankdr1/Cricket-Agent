@@ -3,6 +3,9 @@ import fitz  # PyMuPDF
 from groq import Groq
 import base64
 import os
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Page config
 st.set_page_config(
@@ -137,7 +140,7 @@ footer {
 # Hero Section
 st.markdown("""
 <div class="hero">
-    <div class="hero-badge">⚡ AI Powered</div>
+    <div class="hero-badge">⚡ RAG Powered</div>
     <h1>Cricket Agent</h1>
     <p>Ask anything about cricket — powered by AI</p>
 </div>
@@ -155,7 +158,7 @@ with st.sidebar:
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
         st.rerun()
-    st.markdown("<small style='color:#3a4a5a'>Cricket Agent v1.0</small>", unsafe_allow_html=True)
+    st.markdown("<small style='color:#3a4a5a'>Cricket Agent v2.0 RAG</small>", unsafe_allow_html=True)
 
 api_key = st.secrets.get("GROQ_API_KEY", "")
 
@@ -163,7 +166,29 @@ api_key = st.secrets.get("GROQ_API_KEY", "")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Auto-load PDFs from pdfs folder
+# RAG functions
+def split_into_chunks(text, chunk_size=500):
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size):
+        chunk = " ".join(words[i:i+chunk_size])
+        chunks.append(chunk)
+    return chunks
+
+def find_relevant_chunks(question, chunks, top_k=5):
+    if not chunks:
+        return ""
+    all_texts = [question] + chunks
+    vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = vectorizer.fit_transform(all_texts)
+    question_vec = tfidf_matrix[0]
+    chunk_vecs = tfidf_matrix[1:]
+    similarities = cosine_similarity(question_vec, chunk_vecs)[0]
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    relevant = [chunks[i] for i in top_indices]
+    return "\n\n".join(relevant)
+
+# Auto-load PDFs
 pdf_text = ""
 page_count = 0
 pdf_folder = "pdfs"
@@ -176,7 +201,8 @@ for filename in pdf_files:
         pdf_text += page.get_text()
     page_count += len(pdf)
 
-word_count = len(pdf_text.split())
+# Split into chunks for RAG
+chunks = split_into_chunks(pdf_text)
 
 if pdf_files:
 
@@ -191,7 +217,7 @@ if pdf_files:
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"You are a cricket expert. Summarize ALL these cricket documents in bullet points covering key topics from each.\n\nDocuments:\n{pdf_text[:20000]}"
+                        "content": f"You are a cricket expert. Summarize ALL these cricket documents in bullet points.\n\nDocuments:\n{pdf_text[:20000]}"
                     }]
                 )
                 summary = response.choices[0].message.content
@@ -218,12 +244,12 @@ if pdf_files:
             with st.spinner("Analyzing..."):
                 client = Groq(api_key=api_key)
 
-                # Check if question is cricket related
+                # Check if cricket related
                 check_response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[{
                         "role": "user",
-                        "content": f"Is this message related to cricket, OR is it a greeting, emotion, appreciation or general conversation (like hello, thank you, how are you, great, awesome etc)? Answer only YES or NO: '{question}'"
+                        "content": f"Given this conversation context, is the latest message a follow-up to a cricket topic, OR related to cricket, OR a greeting/emotion/appreciation? Answer only YES or NO.\n\nPrevious messages: {[m['content'] for m in st.session_state.messages[-3:]]}\n\nLatest message: '{question}'"
                     }]
                 )
                 is_cricket = "YES" in check_response.choices[0].message.content.upper()
@@ -231,10 +257,13 @@ if pdf_files:
                 if not is_cricket:
                     answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
                 else:
+                    # RAG - find relevant chunks
+                    relevant_context = find_relevant_chunks(question, chunks)
+
                     history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
                     history.insert(0, {
                         "role": "user",
-                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use documents only for specific stats. IMPORTANT RULES FOR PREDICTIONS: 1) If someone asks for future match predictions, always start your answer with a clear disclaimer: 'Note: This is purely a prediction based on historical data. Player availability and team compositions may have changed as some players may have retired or new players may have emerged.' 2) Never confidently state specific player names in future predictions without mentioning they might not be playing anymore. 3) Always remind that cricket is unpredictable.\n\nDocuments:\n{pdf_text[:8000]}"
+                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use the relevant context below for specific stats and facts. For future match predictions, always add a disclaimer that it is just a prediction and player availability may have changed.\n\nRelevant Context:\n{relevant_context}"
                     })
                     response = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
@@ -256,5 +285,5 @@ else:
 # Footer
 st.markdown("""
 <hr class="divider">
-<footer>CRICKET AGENT · BUILT WITH GROQ AI · 2026</footer>
+<footer>CRICKET AGENT · RAG POWERED · 2026</footer>
 """, unsafe_allow_html=True)
