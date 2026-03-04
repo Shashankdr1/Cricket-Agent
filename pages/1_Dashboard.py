@@ -165,7 +165,7 @@ if tournament in ["All Formats", "ODI World Cup"]:
         }
         fig = px.pie(wc_data, values="Titles", names="Team",
                      title="🌍 ODI World Cup Titles",
-                     color_discrete_sequence=["#f9e04b", "#ff6b35", "#00d4ff", "#ff3366", "#00ff88", "#ffffff"])
+                     color_discrete_sequence=["#FFD700", "#0057A8", "#7B3F00", "#006600", "#00D4FF", "#CF0A0A"])
         fig.update_layout(**chart_layout())
         fig.update_traces(textfont_color='white')
         st.plotly_chart(fig, use_container_width=True)
@@ -268,9 +268,15 @@ if tournament in ["All Formats", "Test Cricket"]:
         fig8 = px.bar(legends, x="Player", y="Runs", color="Country",
                       title="👑 Legend Batsmen - Career Test Runs",
                       color_discrete_map={
-                          "India": "#f9e04b", "Australia": "#ff6b35",
-                          "South Africa": "#00d4ff", "Sri Lanka": "#00ff88", "West Indies": "#ff3366"
-                      })
+                                "India": "#0057A8",
+                                "Australia": "#FFD700",
+                                "England": "#CF0A0A",
+                                "Pakistan": "#006600",
+                                "West Indies": "#7B3F00",
+                                "New Zealand": "#000000",
+                                "South Africa": "#FF69B4",
+                                "Sri Lanka": "#00D4FF"
+                            })
         fig8.update_layout(**chart_layout())
         fig8.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
         fig8.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
@@ -303,8 +309,14 @@ if team1 and team2:
     t2_values = [team_data[team2][c] for c in categories]
 
     fig_compare = go.Figure()
-    fig_compare.add_trace(go.Bar(name=team1, x=categories, y=t1_values, marker_color='#f9e04b'))
-    fig_compare.add_trace(go.Bar(name=team2, x=categories, y=t2_values, marker_color='#ff6b35'))
+    team_colors = {
+    "India": "#0057A8", "Australia": "#FFD700", "England": "#CF0A0A",
+    "Pakistan": "#006600", "West Indies": "#7B3F00", "New Zealand": "#1a1a1a",
+    "South Africa": "#FF69B4", "Sri Lanka": "#00D4FF"
+        }
+    fig_compare.add_trace(go.Bar(name=team1, x=categories, y=t1_values, marker_color=team_colors.get(team1, "#f9e04b")))
+    fig_compare.add_trace(go.Bar(name=team2, x=categories, y=t2_values, marker_color=team_colors.get(team2, "#ff6b35")))
+
     fig_compare.update_layout(
         **chart_layout(),
         barmode='group',
