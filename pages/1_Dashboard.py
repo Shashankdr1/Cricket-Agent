@@ -218,5 +218,5 @@ st.plotly_chart(fig5, use_container_width=True)
 # Footer
 st.markdown("""
 <hr class="divider">
-<footer>CRICKET DASHBOARD · POWERED BY AI · 2026</footer>
+<footer>CRICKET AGENT · RAG POWERED · 2026 · Built by Shashank DR</footer>
 """, unsafe_allow_html=True)
