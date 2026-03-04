@@ -1,7 +1,8 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import fitz
 import os
 import plotly.express as px
+import plotly.graph_objects as go
 import base64
 
 # Page config
@@ -30,7 +31,7 @@ st.markdown(f"""
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.82);
     z-index: 0;
 }}
 </style>
@@ -41,23 +42,20 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap');
 
 * { box-sizing: border-box; }
-
 html, body, [data-testid="stAppViewContainer"] {
     font-family: 'DM Sans', sans-serif;
     color: white;
 }
-
 [data-testid="stHeader"] { background: transparent; }
 [data-testid="stToolbar"] { display: none; }
 
 .hero {
     text-align: center;
-    padding: 2rem 0 1rem 0;
+    padding: 2rem 0 0.5rem 0;
 }
-
 .hero h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 900;
     background: linear-gradient(135deg, #ffffff 30%, #f9e04b 70%, #ffffff 100%);
     -webkit-background-clip: text;
@@ -65,155 +63,291 @@ html, body, [data-testid="stAppViewContainer"] {
     background-clip: text;
     margin: 0 0 0.5rem 0;
 }
-
 .hero p {
-    color: #ffffff;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
-    font-size: 1rem;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.95rem;
 }
-
-.stat-card {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 16px;
-    padding: 1.5rem;
-    text-align: center;
+.badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #2d6a4f, #1b4332);
+    border: 1px solid #40916c;
+    color: #95d5b2;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 2rem;
     margin-bottom: 1rem;
 }
-
-.stat-card h2 {
+.section-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2.5rem;
+    font-size: 1.2rem;
     color: #f9e04b;
-    margin: 0;
+    margin: 1.5rem 0 0.8rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
-
-.stat-card p {
-    color: #ffffff;
+.player-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+.player-card h3 {
+    font-family: 'Playfair Display', serif;
+    color: #f9e04b;
+    margin: 0 0 0.3rem 0;
+    font-size: 1.1rem;
+}
+.player-card p {
+    color: rgba(255,255,255,0.7);
     font-size: 0.85rem;
-    margin: 0.3rem 0 0 0;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    margin: 0.15rem 0;
 }
-
 .divider {
     border: none;
     height: 1px;
-    background: linear-gradient(to right, transparent, #2d4a3e, transparent);
-    margin: 1rem 0;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+    margin: 1.5rem 0;
 }
-
 footer {
     text-align: center;
-    color: #ffffff;
+    color: rgba(255,255,255,0.4);
     font-size: 0.75rem;
     padding: 2rem 0;
     letter-spacing: 0.1em;
 }
+.stSelectbox label { color: white !important; }
+.stTextInput label { color: white !important; }
+div[data-baseweb="select"] { background: rgba(255,255,255,0.08) !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # Hero
 st.markdown("""
 <div class="hero">
-    <div style="display:inline-block; background:linear-gradient(135deg,#2d6a4f,#1b4332); border:1px solid #40916c; color:#95d5b2; font-size:0.7rem; letter-spacing:0.25em; text-transform:uppercase; padding:0.4rem 1rem; border-radius:2rem; margin-bottom:1rem;">📊 Live Dashboard</div>
+    <div class="badge">📊 Live Dashboard</div>
     <h1>Cricket Dashboard</h1>
     <p>Stats, Rankings & Tournament History</p>
 </div>
-<hr class="divider">
 """, unsafe_allow_html=True)
 
+# Navigation
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown('<a href="/" target="_self"><button style="width:100%; padding:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; font-size:1rem; cursor:pointer;">💬 AI Chat</button></a>', unsafe_allow_html=True)
+    st.markdown('<a href="/" target="_self"><button style="width:100%; padding:0.7rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:white; font-size:0.95rem; cursor:pointer;">💬 AI Chat</button></a>', unsafe_allow_html=True)
 with col2:
-    st.markdown('<a href="/Dashboard" target="_self"><button style="width:100%; padding:0.8rem; background:rgba(64,145,108,0.4); border:1px solid #40916c; border-radius:10px; color:white; font-size:1rem; cursor:pointer;">📊 Dashboard</button></a>', unsafe_allow_html=True)
+    st.markdown('<a href="/Dashboard" target="_self"><button style="width:100%; padding:0.7rem; background:rgba(64,145,108,0.35); border:1px solid #40916c; border-radius:10px; color:white; font-size:0.95rem; cursor:pointer;">📊 Dashboard</button></a>', unsafe_allow_html=True)
 
-# Load PDFs
-pdf_folder = "pdfs"
-pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
-page_count = 0
-word_count = 0
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-for filename in pdf_files:
-    path = os.path.join(pdf_folder, filename)
-    pdf = fitz.open(path)
-    for page in pdf:
-        word_count += len(page.get_text().split())
-    page_count += len(pdf)
+# ── TOURNAMENT FILTER ──────────────────────────────
+st.markdown('<div class="section-title">🏆 Tournament Overview</div>', unsafe_allow_html=True)
 
-# Row 1
-col1, col2 = st.columns(2)
+tournament = st.selectbox("", ["All Formats", "ODI World Cup", "T20 World Cup", "IPL", "Test Cricket"], label_visibility="collapsed")
 
-with col1:
-    st.markdown("#### 🏆 ICC Test Team Rankings")
-    teams = ["Australia", "India", "England", "New Zealand", "South Africa", "Pakistan", "Sri Lanka", "West Indies"]
-    ratings = [128, 121, 110, 98, 95, 88, 75, 68]
-    fig = px.bar(x=ratings, y=teams, orientation='h', color=ratings,
-                 color_continuous_scale=["#ffffff", "#f9e04b", "#ff6b35"],
-                 labels={"x": "Rating Points", "y": "Team"})
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
-                      font=dict(color='white'), coloraxis_showscale=False,
-                      margin=dict(l=0, r=0, t=0, b=0))
-    fig.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-    fig.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
-    st.plotly_chart(fig, use_container_width=True)
+def chart_layout():
+    return dict(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(255,255,255,0.04)',
+        font=dict(color='white', family='DM Sans'),
+        margin=dict(l=10, r=10, t=30, b=10),
+        title_font=dict(color='#f9e04b', size=13)
+    )
 
-with col2:
-    st.markdown("#### 🌍 ODI World Cup Winners")
-    wc_data = {"Team": ["Australia", "India", "West Indies", "Pakistan", "Sri Lanka", "England"],
-               "Titles": [5, 3, 2, 1, 1, 1]}
-    fig2 = px.pie(wc_data, values="Titles", names="Team",
-                  color_discrete_sequence=["#ff6b35", "#f9e04b", "#ffffff", "#00d4ff", "#ff3366", "#00ff88"])
-    fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color='white'),
-                       margin=dict(l=0, r=0, t=0, b=0))
-    st.plotly_chart(fig2, use_container_width=True)
+if tournament in ["All Formats", "ODI World Cup"]:
+    col1, col2 = st.columns(2)
+    with col1:
+        wc_data = {
+            "Team": ["Australia", "India", "West Indies", "Pakistan", "Sri Lanka", "England"],
+            "Titles": [5, 3, 2, 1, 1, 1]
+        }
+        fig = px.pie(wc_data, values="Titles", names="Team",
+                     title="🌍 ODI World Cup Titles",
+                     color_discrete_sequence=["#f9e04b", "#ff6b35", "#00d4ff", "#ff3366", "#00ff88", "#ffffff"])
+        fig.update_layout(**chart_layout())
+        fig.update_traces(textfont_color='white')
+        st.plotly_chart(fig, use_container_width=True)
 
-# Row 2
-col3, col4 = st.columns(2)
+    with col2:
+        odi_runs = {
+            "Player": ["Sachin Tendulkar", "Ricky Ponting", "Sanath Jayasuriya", "Mahela Jayawardene", "Inzamam-ul-Haq"],
+            "Runs": [18426, 13704, 13430, 12650, 11739]
+        }
+        fig2 = px.bar(odi_runs, x="Runs", y="Player", orientation='h',
+                      title="🏏 ODI All-Time Top Run Scorers",
+                      color="Runs",
+                      color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
+        fig2.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig2.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig2.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig2, use_container_width=True)
 
-with col3:
-    st.markdown("#### 🏏 IPL All-Time Top Run Scorers")
-    ipl_runs = {"Player": ["Virat Kohli", "Shikhar Dhawan", "Rohit Sharma", "David Warner", "AB de Villiers"],
-                "Runs": [8161, 6769, 6628, 6397, 5162]}
-    fig3 = px.bar(ipl_runs, x="Player", y="Runs", color="Runs",
-                  color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
-    fig3.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
-                       font=dict(color='white'), coloraxis_showscale=False,
-                       margin=dict(l=0, r=0, t=0, b=0))
-    fig3.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-    fig3.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
-    st.plotly_chart(fig3, use_container_width=True)
+if tournament in ["All Formats", "T20 World Cup"]:
+    col3, col4 = st.columns(2)
+    with col3:
+        t20_data = {
+            "Team": ["India", "England", "West Indies", "Australia", "Pakistan", "Sri Lanka"],
+            "Titles": [2, 2, 2, 1, 1, 1]
+        }
+        fig3 = px.bar(t20_data, x="Team", y="Titles",
+                      title="⚡ T20 World Cup Titles",
+                      color="Titles",
+                      color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
+        fig3.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig3.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig3.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig3, use_container_width=True)
 
-with col4:
-    st.markdown("#### ⚡ T20 World Cup Winners")
-    t20_data = {"Team": ["India", "England", "West Indies", "Australia", "Pakistan", "Sri Lanka"],
-                "Titles": [2, 2, 2, 1, 1, 1]}
-    fig4 = px.bar(t20_data, x="Team", y="Titles", color="Titles",
-                  color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
-    fig4.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
-                       font=dict(color='white'), coloraxis_showscale=False,
-                       margin=dict(l=0, r=0, t=0, b=0))
-    fig4.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-    fig4.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
-    st.plotly_chart(fig4, use_container_width=True)
+    with col4:
+        t20_runs = {
+            "Player": ["Virat Kohli", "Rohit Sharma", "Martin Guptill", "Babar Azam", "David Warner"],
+            "Runs": [4188, 4231, 3531, 3985, 3277]
+        }
+        fig4 = px.bar(t20_runs, x="Player", y="Runs",
+                      title="🏏 T20I Top Run Scorers",
+                      color="Runs",
+                      color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
+        fig4.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig4.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig4.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig4, use_container_width=True)
 
-# Row 3 - Player comparison
-st.markdown("---")
-st.markdown("#### 👑 Legend Batsmen - Career Test Runs")
-legends = {
-    "Player": ["Sachin Tendulkar", "Ricky Ponting", "Jacques Kallis", "Rahul Dravid", "Kumar Sangakkara", "Brian Lara"],
-    "Runs": [15921, 13378, 13289, 13288, 12400, 11953],
-    "Country": ["India", "Australia", "South Africa", "India", "Sri Lanka", "West Indies"]
+if tournament in ["All Formats", "IPL"]:
+    col5, col6 = st.columns(2)
+    with col5:
+        ipl_runs = {
+            "Player": ["Virat Kohli", "Shikhar Dhawan", "Rohit Sharma", "David Warner", "AB de Villiers"],
+            "Runs": [8161, 6769, 6628, 6397, 5162]
+        }
+        fig5 = px.bar(ipl_runs, x="Player", y="Runs",
+                      title="🏏 IPL All-Time Top Run Scorers",
+                      color="Runs",
+                      color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"])
+        fig5.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig5.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig5.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig5, use_container_width=True)
+
+    with col6:
+        ipl_wickets = {
+            "Player": ["Yuzvendra Chahal", "DJ Bravo", "Lasith Malinga", "Amit Mishra", "Piyush Chawla"],
+            "Wickets": [221, 183, 170, 166, 157]
+        }
+        fig6 = px.bar(ipl_wickets, x="Wickets", y="Player", orientation='h',
+                      title="🎯 IPL All-Time Top Wicket Takers",
+                      color="Wickets",
+                      color_continuous_scale=["#1b4332", "#ff6b35", "#f9e04b"])
+        fig6.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig6.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig6.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig6, use_container_width=True)
+
+if tournament in ["All Formats", "Test Cricket"]:
+    col7, col8 = st.columns(2)
+    with col7:
+        teams = ["Australia", "India", "England", "New Zealand", "South Africa", "Pakistan", "Sri Lanka", "West Indies"]
+        ratings = [128, 121, 110, 98, 95, 88, 75, 68]
+        fig7 = px.bar(x=ratings, y=teams, orientation='h',
+                      title="🏆 ICC Test Team Rankings",
+                      color=ratings,
+                      color_continuous_scale=["#1b4332", "#40916c", "#f9e04b"],
+                      labels={"x": "Rating Points", "y": "Team"})
+        fig7.update_layout(**chart_layout(), coloraxis_showscale=False)
+        fig7.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig7.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig7, use_container_width=True)
+
+    with col8:
+        legends = {
+            "Player": ["Sachin Tendulkar", "Ricky Ponting", "Jacques Kallis", "Rahul Dravid", "Kumar Sangakkara", "Brian Lara"],
+            "Runs": [15921, 13378, 13289, 13288, 12400, 11953],
+            "Country": ["India", "Australia", "South Africa", "India", "Sri Lanka", "West Indies"]
+        }
+        fig8 = px.bar(legends, x="Player", y="Runs", color="Country",
+                      title="👑 Legend Batsmen - Career Test Runs",
+                      color_discrete_map={
+                          "India": "#f9e04b", "Australia": "#ff6b35",
+                          "South Africa": "#00d4ff", "Sri Lanka": "#00ff88", "West Indies": "#ff3366"
+                      })
+        fig8.update_layout(**chart_layout())
+        fig8.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+        fig8.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+        st.plotly_chart(fig8, use_container_width=True)
+
+# ── TEAM COMPARISON ────────────────────────────────
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">⚔️ Team Comparison</div>', unsafe_allow_html=True)
+
+team_data = {
+    "India":        {"ODI Titles": 3, "T20 Titles": 2, "Test Rating": 121, "WC Appearances": 13},
+    "Australia":    {"ODI Titles": 5, "T20 Titles": 1, "Test Rating": 128, "WC Appearances": 13},
+    "England":      {"ODI Titles": 1, "T20 Titles": 2, "Test Rating": 110, "WC Appearances": 13},
+    "Pakistan":     {"ODI Titles": 1, "T20 Titles": 1, "Test Rating": 88,  "WC Appearances": 13},
+    "West Indies":  {"ODI Titles": 2, "T20 Titles": 2, "Test Rating": 68,  "WC Appearances": 13},
+    "New Zealand":  {"ODI Titles": 0, "T20 Titles": 0, "Test Rating": 98,  "WC Appearances": 13},
+    "South Africa": {"ODI Titles": 0, "T20 Titles": 0, "Test Rating": 95,  "WC Appearances": 9},
+    "Sri Lanka":    {"ODI Titles": 1, "T20 Titles": 1, "Test Rating": 75,  "WC Appearances": 13},
 }
-fig5 = px.bar(legends, x="Player", y="Runs", color="Country",
-              color_discrete_map={"India": "#40916c", "Australia": "#f9e04b",
-                                  "South Africa": "#c9a96e", "Sri Lanka": "#2d6a4f", "West Indies": "#95d5b2"})
-fig5.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
-                   font=dict(color='white'), margin=dict(l=0, r=0, t=0, b=0))
-fig5.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-fig5.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
-st.plotly_chart(fig5, use_container_width=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    team1 = st.selectbox("Select Team 1", list(team_data.keys()), index=0)
+with col2:
+    team2 = st.selectbox("Select Team 2", list(team_data.keys()), index=1)
+
+if team1 and team2:
+    categories = ["ODI Titles", "T20 Titles", "Test Rating", "WC Appearances"]
+    t1_values = [team_data[team1][c] for c in categories]
+    t2_values = [team_data[team2][c] for c in categories]
+
+    fig_compare = go.Figure()
+    fig_compare.add_trace(go.Bar(name=team1, x=categories, y=t1_values, marker_color='#f9e04b'))
+    fig_compare.add_trace(go.Bar(name=team2, x=categories, y=t2_values, marker_color='#ff6b35'))
+    fig_compare.update_layout(
+        **chart_layout(),
+        barmode='group',
+        legend=dict(font=dict(color='white')),
+        title=f"⚔️ {team1} vs {team2}"
+    )
+    fig_compare.update_xaxes(gridcolor='rgba(255,255,255,0.08)')
+    fig_compare.update_yaxes(gridcolor='rgba(255,255,255,0.08)')
+    st.plotly_chart(fig_compare, use_container_width=True)
+
+# ── PLAYER SEARCH ──────────────────────────────────
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">🔍 Player Search</div>', unsafe_allow_html=True)
+
+players_db = {
+    "Sachin Tendulkar": {"Country": "India", "Format": "All", "Runs": 34357, "Wickets": 201, "Matches": 664, "Role": "Batsman", "Era": "1989-2013"},
+    "Virat Kohli":      {"Country": "India", "Format": "All", "Runs": 26000, "Wickets": 4,   "Matches": 500, "Role": "Batsman", "Era": "2008-Present"},
+    "MS Dhoni":         {"Country": "India", "Format": "All", "Runs": 17266, "Wickets": 0,   "Matches": 538, "Role": "WK-Batsman", "Era": "2004-2020"},
+    "Rohit Sharma":     {"Country": "India", "Format": "All", "Runs": 18000, "Wickets": 15,  "Matches": 470, "Role": "Batsman", "Era": "2007-Present"},
+    "Ricky Ponting":    {"Country": "Australia", "Format": "All", "Runs": 27483, "Wickets": 5, "Matches": 560, "Role": "Batsman", "Era": "1995-2012"},
+    "Brian Lara":       {"Country": "West Indies", "Format": "All", "Runs": 22358, "Wickets": 4, "Matches": 430, "Role": "Batsman", "Era": "1990-2007"},
+    "AB de Villiers":   {"Country": "South Africa", "Format": "All", "Runs": 20014, "Wickets": 0, "Matches": 420, "Role": "WK-Batsman", "Era": "2004-2018"},
+    "Babar Azam":       {"Country": "Pakistan", "Format": "All", "Runs": 14000, "Wickets": 0, "Matches": 300, "Role": "Batsman", "Era": "2015-Present"},
+    "Wasim Akram":      {"Country": "Pakistan", "Format": "All", "Runs": 3717, "Wickets": 916, "Matches": 460, "Role": "Bowler", "Era": "1984-2003"},
+    "Shane Warne":      {"Country": "Australia", "Format": "Test", "Runs": 3154, "Wickets": 708, "Matches": 194, "Role": "Bowler", "Era": "1992-2007"},
+    "Muttiah Muralitharan": {"Country": "Sri Lanka", "Format": "All", "Runs": 1261, "Wickets": 1347, "Matches": 495, "Role": "Bowler", "Era": "1992-2011"},
+}
+
+search = st.text_input("", placeholder="Type player name e.g. Virat Kohli, Sachin...", label_visibility="collapsed")
+
+if search:
+    results = {k: v for k, v in players_db.items() if search.lower() in k.lower()}
+    if results:
+        for name, stats in results.items():
+            st.markdown(f"""
+            <div class="player-card">
+                <h3>🏏 {name}</h3>
+                <p>🌍 Country: {stats['Country']} &nbsp;|&nbsp; 🎭 Role: {stats['Role']} &nbsp;|&nbsp; 📅 Era: {stats['Era']}</p>
+                <p>🏟️ Matches: {stats['Matches']} &nbsp;|&nbsp; 🏏 Runs: {stats['Runs']:,} &nbsp;|&nbsp; 🎯 Wickets: {stats['Wickets']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown('<p style="color:rgba(255,255,255,0.5); text-align:center;">No player found. Try another name!</p>', unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
