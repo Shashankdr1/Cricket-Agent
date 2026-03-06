@@ -6,6 +6,7 @@ import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import time
 
 # Page config
 st.set_page_config(
@@ -122,6 +123,19 @@ html, body, [data-testid="stAppViewContainer"] {
     text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
     font-size: 0.95rem;
     border-left: 3px solid #40916c;
+    line-height: 1.8;
+}
+
+.suggested-btn {
+    display: inline-block;
+    background: rgba(64,145,108,0.2);
+    border: 1px solid #40916c;
+    color: #95d5b2;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin: 0.25rem;
+    cursor: pointer;
 }
 
 footer {
@@ -147,6 +161,7 @@ st.markdown("""
 <hr class="divider">
 """, unsafe_allow_html=True)
 
+# Navigation
 col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown('<a href="/" target="_self"><button style="width:100%; padding:0.7rem; background:rgba(64,145,108,0.4); border:1px solid #40916c; border-radius:10px; color:white; font-size:0.9rem; cursor:pointer;">💬 AI Chat</button></a>', unsafe_allow_html=True)
@@ -161,7 +176,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**How to use:**")
     st.markdown("1. Ask any cricket question!")
-    st.markdown("2. Click 📝 to summarize all PDFs")
+    st.markdown("2. Click suggested questions below")
+    st.markdown("3. Click 📝 to summarize all PDFs")
     st.markdown("---")
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
@@ -170,9 +186,11 @@ with st.sidebar:
 
 api_key = st.secrets.get("GROQ_API_KEY", "")
 
-# Initialize chat history
+# Initialize chat history and typing state
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "suggested_question" not in st.session_state:
+    st.session_state.suggested_question = None
 
 # RAG functions
 def split_into_chunks(text, chunk_size=500):
@@ -196,6 +214,33 @@ def find_relevant_chunks(question, chunks, top_k=5):
     relevant = [chunks[i] for i in top_indices]
     return "\n\n".join(relevant)
 
+def format_answer(text):
+    """Convert markdown-style text to HTML for better formatting"""
+    import re
+    # Bold text
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Bullet points
+    lines = text.split('\n')
+    formatted = []
+    for line in lines:
+        line = line.strip()
+        if line.startswith('* ') or line.startswith('- '):
+            line = f'<li style="margin:0.3rem 0;">{line[2:]}</li>'
+        elif line.startswith('# '):
+            line = f'<h4 style="color:#f9e04b; margin:0.5rem 0;">{line[2:]}</h4>'
+        elif line == '':
+            line = '<br>'
+        formatted.append(line)
+    result = '\n'.join(formatted)
+    result = result.replace('<li', '<ul style="padding-left:1.2rem; margin:0.3rem 0;"><li').replace('</li>\n<br>', '</li></ul>')
+    return result
+
+def typing_animation(placeholder, text):
+    """Show typing animation then display full text"""
+    placeholder.markdown('<div class="chat-bot">🏏 <em style="color:#95d5b2;">typing...</em></div>', unsafe_allow_html=True)
+    time.sleep(0.8)
+    placeholder.markdown(f'<div class="chat-bot">🏏 {format_answer(text)}</div>', unsafe_allow_html=True)
+
 # Auto-load PDFs
 pdf_text = ""
 page_count = 0
@@ -209,7 +254,6 @@ for filename in pdf_files:
         pdf_text += page.get_text()
     page_count += len(pdf)
 
-# Split into chunks for RAG
 chunks = split_into_chunks(pdf_text)
 
 if pdf_files:
@@ -233,51 +277,84 @@ if pdf_files:
             st.session_state.messages.append({"role": "assistant", "content": summary})
             st.rerun()
 
+    # Suggested questions — only show when chat is empty
+    if not st.session_state.messages:
+        st.markdown("""
+        <div style="margin: 1rem 0 0.5rem 0;">
+            <p style="color:rgba(255,255,255,0.6); font-size:0.85rem; margin-bottom:0.5rem;">💡 Try asking:</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        suggested = [
+            "🏏 Who has scored the most runs in cricket?",
+            "⚡ What are the rules of T20 cricket?",
+            "🏆 Who won the 2023 ODI World Cup?",
+            "🎯 Who is the best spinner in cricket history?",
+            "📊 Explain the DLS method",
+            "🌍 What is the Ashes series?",
+        ]
+
+        cols = st.columns(2)
+        for i, q in enumerate(suggested):
+            with cols[i % 2]:
+                if st.button(q, key=f"sq_{i}", use_container_width=True):
+                    st.session_state.suggested_question = q
+                    st.rerun()
+
     # Display chat history
     for msg in st.session_state.messages:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-user">🧑 {msg["content"]}</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="chat-bot">🏏 {msg["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-bot">🏏 {format_answer(msg["content"])}</div>', unsafe_allow_html=True)
 
-    # Question input
+    # Handle suggested question
     question = st.chat_input("Ask a question about cricket...")
+    if st.session_state.suggested_question:
+        question = st.session_state.suggested_question
+        st.session_state.suggested_question = None
 
     if question:
         if not api_key:
             st.warning("⚠️ API key not found.")
         else:
             st.session_state.messages.append({"role": "user", "content": question})
+            st.markdown(f'<div class="chat-user">🧑 {question}</div>', unsafe_allow_html=True)
 
-            with st.spinner("Analyzing..."):
-                client = Groq(api_key=api_key)
+            # Typing animation placeholder
+            answer_placeholder = st.empty()
+            answer_placeholder.markdown('<div class="chat-bot">🏏 <em style="color:#95d5b2;">typing...</em></div>', unsafe_allow_html=True)
 
-                # Check if cricket related
-                check_response = client.chat.completions.create(
+            client = Groq(api_key=api_key)
+
+            # Check if cricket related
+            check_response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{
+                    "role": "user",
+                    "content": f"Answer YES if the latest message is ANY of these: (1) related to cricket, (2) a greeting like hello/hi, (3) an emotion or appreciation like thank you/perfect/great/awesome/nice/wow/good, (4) a follow-up to previous cricket conversation, (5) a short response like ok/yes/no/sure. Answer NO only if it is clearly about a non-cricket topic like science, politics, food etc.\n\nPrevious messages: {[m['content'] for m in st.session_state.messages[-3:]]}\n\nLatest message: '{question}'"
+                }]
+            )
+            is_cricket = "YES" in check_response.choices[0].message.content.upper()
+
+            if not is_cricket:
+                answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
+            else:
+                relevant_context = find_relevant_chunks(question, chunks)
+                history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+                history.insert(0, {
+                    "role": "user",
+                    "content": f"You are a cricket expert AI. Answer cricket questions directly. Format your answers nicely using bullet points (- ) and bold (**text**) where appropriate. NEVER say 'the document does not mention'. Use context below for specific stats.\n\nRelevant Context:\n{relevant_context}"
+                })
+                response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[{
-                        "role": "user",
-                        "content": f"Answer YES if the latest message is ANY of these: (1) related to cricket, (2) a greeting like hello/hi, (3) an emotion or appreciation like thank you/perfect/great/awesome/nice/wow/good, (4) a follow-up to previous cricket conversation, (5) a short response like ok/yes/no/sure. Answer NO only if it is clearly about a non-cricket topic like science, politics, food etc.\n\nPrevious messages: {[m['content'] for m in st.session_state.messages[-3:]]}\n\nLatest message: '{question}'"
-                    }]
+                    messages=history
                 )
-                is_cricket = "YES" in check_response.choices[0].message.content.upper()
+                answer = response.choices[0].message.content
 
-                if not is_cricket:
-                    answer = "I only know about cricket! 🏏 Please ask me something about cricket players, matches, rules, tournaments, or history."
-                else:
-                    # RAG - find relevant chunks
-                    relevant_context = find_relevant_chunks(question, chunks)
-
-                    history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
-                    history.insert(0, {
-                        "role": "user",
-                        "content": f"You are a cricket expert AI. Answer cricket questions directly from your knowledge. NEVER say 'the document does not mention'. Use the relevant context below for specific stats and facts. For future match predictions, always add a disclaimer that it is just a prediction and player availability may have changed.\n\nRelevant Context:\n{relevant_context}"
-                    })
-                    response = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",
-                        messages=history
-                    )
-                    answer = response.choices[0].message.content
+            # Show typing animation then answer
+            time.sleep(0.5)
+            answer_placeholder.markdown(f'<div class="chat-bot">🏏 {format_answer(answer)}</div>', unsafe_allow_html=True)
 
             st.session_state.messages.append({"role": "assistant", "content": answer})
             st.rerun()
