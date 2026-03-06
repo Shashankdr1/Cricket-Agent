@@ -294,6 +294,22 @@ if pdf_files:
             "🌍 What is the Ashes series?",
         ]
 
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"] button {
+            background: rgba(0,0,0,0.5) !important;
+            border: 1px solid #40916c !important;
+            color: #95d5b2 !important;
+            border-radius: 20px !important;
+            font-size: 0.85rem !important;
+    }
+        div[data-testid="stButton"] button:hover {
+            background: rgba(64,145,108,0.3) !important;
+            color: white !important;
+    }
+        </style>
+        """,unsafe_allow_html=True)
+
         cols = st.columns(2)
         for i, q in enumerate(suggested):
             with cols[i % 2]:
