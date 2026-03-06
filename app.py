@@ -215,24 +215,22 @@ def find_relevant_chunks(question, chunks, top_k=5):
     return "\n\n".join(relevant)
 
 def format_answer(text):
-    """Convert markdown-style text to HTML for better formatting"""
     import re
     # Bold text
     text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
-    # Bullet points
     lines = text.split('\n')
     formatted = []
     for line in lines:
         line = line.strip()
         if line.startswith('* ') or line.startswith('- '):
-            line = f'<li style="margin:0.3rem 0;">{line[2:]}</li>'
+            line = f'<li style="margin:0.3rem 0; margin-left:0;">{line[2:]}</li>'
         elif line.startswith('# '):
             line = f'<h4 style="color:#f9e04b; margin:0.5rem 0;">{line[2:]}</h4>'
         elif line == '':
             line = '<br>'
         formatted.append(line)
     result = '\n'.join(formatted)
-    result = result.replace('<li', '<ul style="padding-left:1.2rem; margin:0.3rem 0;"><li').replace('</li>\n<br>', '</li></ul>')
+    result = f'<ul style="padding-left:1rem; margin:0.3rem 0; list-style-position:outside;">' + result + '</ul>'
     return result
 
 def typing_animation(placeholder, text):
