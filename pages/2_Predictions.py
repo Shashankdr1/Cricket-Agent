@@ -352,5 +352,5 @@ Be specific with current/recent players."""
 # Footer
 st.markdown("""
 <hr class="divider">
-<footer>CRICKET AGENT · RAG POWERED · 2026 · Built by Shashank DR</footer>
+<footer>CRICKET AGENT · RAG POWERED · 2026 · Built by Shashank D R</footer>
 """, unsafe_allow_html=True)
